@@ -25,7 +25,7 @@ In [Main.scala](src/main/scala/Main.scala) next git workflow is used
 ## How to run the project with [LakeFS Playground](https://demo.lakefs.io/) 
 1) Create Lakefs Playground environment
 2) Rename [lakectl.yaml.template](lakectl.yaml.template) to lakectl.yaml project folder
-3) Populate details from [LakeFS Playground](https://demo.lakefs.io/). Please add api path to endpoint url. You can check endpoint path on https://docs.lakefs.io/reference/api.html. Currently, it's api/v1
+3) Populate details from [LakeFS Playground](https://demo.lakefs.io/). Please add api path to endpoint url. You can check endpoint path on https://docs.lakefs.io/reference/api.html. Currently, it's /api/v1
 4) Change repoName in Main.main function
 5) Run Main.scala
 
