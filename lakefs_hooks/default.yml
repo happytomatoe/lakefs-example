@@ -1,0 +1,16 @@
+name: Sending everything to Svix(webhook service)
+description: Experimenting with webhooks
+on:
+  pre-commit:
+    branches:
+  pre-merge:
+    branches:
+  post-commit:
+    branches:
+  post-merge:
+    branches:
+hooks:
+  - id: svix
+    type: webhook
+    properties:
+      url: "https://play.svix.com/in/e_6YXOlc4vf1w22pFEkKw0HGxBcHG/"

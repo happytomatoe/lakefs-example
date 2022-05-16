@@ -1,0 +1,62 @@
+version: '3.7'
+
+
+
+services:
+  lakefs:
+    image: "treeverse/lakefs:${VERSION:-latest}"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "postgres"
+      - "minio"
+    environment:
+      - LAKEFS_BLOCKSTORE_TYPE=s3
+      - LAKEFS_BLOCKSTORE_S3_ENDPOINT=http://minio:9000
+      - LAKEFS_BLOCKSTORE_S3_FORCE_PATH_STYLE=true
+      - LAKEFS_BLOCKSTORE_S3_CREDENTIALS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-AKIAIOSFODNN7EXAMPLE}
+      - LAKEFS_BLOCKSTORE_S3_CREDENTIALS_ACCESS_SECRET_KEY=${AWS_SECRET_ACCESS_KEY:-wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY}
+      - LAKEFS_AUTH_ENCRYPT_SECRET_KEY=${LAKEFS_AUTH_ENCRYPT_SECRET_KEY:-some random secret string}
+      - LAKEFS_DATABASE_CONNECTION_STRING=${LAKEFS_DATABASE_CONNECTION_STRING:-postgres://lakefs:lakefs@postgres/postgres?sslmode=disable}
+      - LAKEFS_BLOCKSTORE_LOCAL_PATH=${LAKEFS_BLOCKSTORE_LOCAL_PATH:-/home/lakefs}
+      - LAKEFS_GATEWAYS_S3_DOMAIN_NAME=${LAKEFS_GATEWAYS_S3_DOMAIN_NAME:-s3.local.lakefs.io:8000}
+      - LAKEFS_LOGGING_LEVEL=${LAKEFS_LOGGING_LEVEL:-INFO}
+      - LAKEFS_STATS_ENABLED
+      - LAKEFS_COMMITTED_LOCAL_CACHE_DIR=${LAKEFS_COMMITTED_LOCAL_CACHE_DIR:-/home/lakefs/.local_tier}
+    entrypoint: ["/app/wait-for", "postgres:5432", "--", "/app/lakefs", "run"]
+  postgres:
+    image: "postgres:${PG_VERSION:-11}"
+    command: "-c log_min_messages=FATAL"
+    environment:
+      POSTGRES_USER: lakefs
+      POSTGRES_PASSWORD: lakefs
+    volumes:
+      - postgredata:/var/lib/postgresql/data
+
+  minio:
+    image: quay.io/minio/minio:RELEASE.2022-05-08T23-50-31Z
+    command: server data --console-address ":9001"
+    expose:
+      - "9000"
+      - "9001"
+    environment:
+      MINIO_ROOT_USER: AKIAIOSFODNN7EXAMPLE
+      MINIO_ROOT_PASSWORD: wJalrXUtnFEMIK7MDENGbPxRfiCYEXAMPLEKEY
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    hostname: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - data:/data
+
+
+## By default this config uses default local driver,
+## For custom volumes replace with volume driver configuration.
+volumes:
+  data:
+  postgredata:
