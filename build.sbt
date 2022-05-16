@@ -15,7 +15,7 @@ libraryDependencies ++= Seq(
   "org.apache.hadoop" % "hadoop-auth" % "3.3.1"
 )
 
-libraryDependencies += "io.lakefs" % "lakefs-spark-client-301_2.12" % "0.1.6"
+libraryDependencies += "io.lakefs" % "api-client" % "0.64.0"
 
 libraryDependencies ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-core" % "2.1.1",
