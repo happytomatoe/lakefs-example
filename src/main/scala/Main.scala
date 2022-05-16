@@ -1,44 +1,59 @@
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.apache.spark.sql.{SaveMode, SparkSession}
 
-import java.io.{File, FileReader}
-import java.util.{Properties, UUID}
-import scala.collection.JavaConverters._
+import java.io.File
+import java.util.UUID
 
 case class Book(name: String, cost: Int, year: Int)
 
+case class LakeFSProperties(credentials: Credentials, server: Server)
+
+case class Server(endpoint_url: String) {
+  require(endpoint_url != null, "endpoint_url is null")
+}
+
+case class Credentials(access_key_id: String, secret_access_key: String) {
+  require(access_key_id != null, "endpoint_url is null")
+  require(secret_access_key != null, "endpoint_url is null")
+}
+
 object Main {
+  val CONFIG_FILE_NAME = "lakectl.yaml"
+  lazy val log = org.apache.log4j.LogManager.getLogger(Main.getClass)
   lazy val (accessKey: String, secretKey: String, endpoint: String) = {
-    val filePath = s"${new File(".").getCanonicalPath}/.env"
-    val properties = new Properties()
-    properties.load(new FileReader(filePath))
-    val map = properties.asScala
-    (map.getOrElse("accessKey", throw createPropNotFoundException("accessKey")),
-      map.getOrElse("secretKey", throw createPropNotFoundException("secretKey")),
-      map.getOrElse("endpoint", throw createPropNotFoundException("endpoint")))
+    val configFile = new File(CONFIG_FILE_NAME)
+    require(configFile.exists(), s"$CONFIG_FILE_NAME doesn't exist")
+    val mapper: ObjectMapper = new ObjectMapper(new YAMLFactory())
+    mapper.registerModule(DefaultScalaModule)
+    val prop: LakeFSProperties = mapper.readValue(configFile, classOf[LakeFSProperties])
+    (prop.credentials.access_key_id, prop.credentials.secret_access_key, prop.server.endpoint_url)
   }
-
-  def createPropNotFoundException(propName: String) = new RuntimeException(s"Cannot find $propName")
-
   lazy val spark = SparkSession
     .builder()
     .appName("Spark LakeFS example")
     .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-    .config("spark.hadoop.fs.s3a.endpoint", endpoint)
+    .config("spark.hadoop.fs.s3a.endpoint", endpoint.replaceFirst("api.*", ""))
     .config("spark.hadoop.fs.s3a.access.key", accessKey)
     .config("spark.hadoop.fs.s3a.secret.key", secretKey)
     .config("spark.hadoop.fs.s3a.path.style.access", "true")
+    .config("spark.logConf", "true")
     .master("local[*]")
     .getOrCreate()
 
 
   def main(args: Array[String]) {
-    val path = CloudPath("test", "test" + UUID.randomUUID())
-    write(path, "main", "table4")
-    read(CloudPath("test", "main"), "table4")
+    val repoName = "test"
+    val path = CloudPath(repoName, "test" + UUID.randomUUID())
+    val tableName = "table2"
+    val mainBranchName = "main"
+    runWorkflow(path, mainBranchName, tableName)
+    read(CloudPath("test", mainBranchName), tableName)
 
   }
 
-  private def write(path: CloudPath, mainBranch: String, tablePath: String) = {
+  private def runWorkflow(path: CloudPath, mainBranch: String, tablePath: String) = {
     val lakeFSApi = new LakeFSApi(accessKey, secretKey, endpoint)
     lakeFSApi.createBranch(path, mainBranch)
     doWork(path, tablePath)
@@ -60,10 +75,12 @@ object Main {
       Book("Scala", 1, 1972),
     )))
     df.show()
+    val bucketPath = createDataPath(path, tablePath)
+    log.info(s"Saving to $bucketPath")
     df.write
       .partitionBy("year")
       .mode(SaveMode.Overwrite)
-      .parquet(createDataPath(path, tablePath))
+      .parquet(bucketPath)
   }
 
   private def createDataPath(path: CloudPath, tablePath: String) = {

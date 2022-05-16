@@ -4,10 +4,11 @@ import io.lakefs.clients.api._
 import java.time.LocalDateTime
 import java.util.UUID
 
-class LakeFSApi(accessKey: String, secretKey: String, endpoint: String) {
+
+class LakeFSApi(accessKey: String, secretKey: String, basePath: String) {
   lazy val defaultClient: ApiClient = {
     val cl = Configuration.getDefaultApiClient
-    cl.setBasePath(s"$endpoint/api/v1")
+    cl.setBasePath(basePath)
     cl.setUsername(accessKey)
     cl.setPassword(secretKey)
     cl
