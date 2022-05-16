@@ -5,7 +5,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 
-class LakeFSApi(accessKey: String, secretKey: String, basePath: String) {
+class LakeFSApi(accessKey: String, secretKey: String, basePath: String) extends Loggable {
+  val apiPath = "/api/"
+  require(basePath.indexOf(apiPath) != -1, "basePath should include api path(/api/...)")
   lazy val defaultClient: ApiClient = {
     val cl = Configuration.getDefaultApiClient
     cl.setBasePath(basePath)
@@ -16,7 +18,9 @@ class LakeFSApi(accessKey: String, secretKey: String, basePath: String) {
 
   def createBranch(path: CloudPath, source: String) = {
     val api = new BranchesApi(defaultClient)
-    api.createBranch(path.repo, new BranchCreation().name(path.branch).source(source))
+    val branchRef = api.createBranch(path.repo, new BranchCreation().name(path.branch).source(source))
+    log.info(s"Created branch $branchRef")
+    branchRef
   }
 
   def deleteBranch(path: CloudPath) = {

@@ -19,9 +19,8 @@ case class Credentials(access_key_id: String, secret_access_key: String) {
   require(secret_access_key != null, "endpoint_url is null")
 }
 
-object Main {
+object Main extends Loggable {
   val CONFIG_FILE_NAME = "lakectl.yaml"
-  lazy val log = org.apache.log4j.LogManager.getLogger(Main.getClass)
   lazy val (accessKey: String, secretKey: String, endpoint: String) = {
     val configFile = new File(CONFIG_FILE_NAME)
     require(configFile.exists(), s"$CONFIG_FILE_NAME doesn't exist")
@@ -44,7 +43,7 @@ object Main {
 
 
   def main(args: Array[String]) {
-    val repoName = "test"
+    val repoName = "my-repo"
     val path = CloudPath(repoName, "test" + UUID.randomUUID())
     val tableName = "table2"
     val mainBranchName = "main"
@@ -56,6 +55,7 @@ object Main {
   private def runWorkflow(path: CloudPath, mainBranch: String, tablePath: String) = {
     val lakeFSApi = new LakeFSApi(accessKey, secretKey, endpoint)
     lakeFSApi.createBranch(path, mainBranch)
+
     doWork(path, tablePath)
     lakeFSApi.commit(path)
     lakeFSApi.merge(path, mainBranch)
