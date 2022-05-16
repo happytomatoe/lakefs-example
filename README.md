@@ -1,4 +1,6 @@
-This is sample repo to show how to use [LakeFS](https://lakefs.io/)
+# LakeFS Scala example
+
+This is sample repo to show how to use [LakeFS](https://lakefs.io/) using scala spark 
 
 
 In [Main.scala](src/main/scala/Main.scala) next git workflow is used
@@ -26,3 +28,9 @@ In [Main.scala](src/main/scala/Main.scala) next git workflow is used
 3) Populate details from [LakeFS Playground](https://demo.lakefs.io/). Please add api path to endpoint url. You can check endpoint path on https://docs.lakefs.io/reference/api.html. Currently, it's api/v1
 4) Change repoName in Main.main function
 5) Run Main.scala
+
+
+
+
+TODO: 
+1) Add data quality check

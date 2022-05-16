@@ -43,13 +43,13 @@ object Main extends Loggable {
 
 
   def main(args: Array[String]) {
-    val repoName = "my-repo"
+    val repoName =
     val mainBranchName = "main"
     val branchName = "test" + UUID.randomUUID()
+    val collectionName = "table"
     val path = CloudPath(repoName, branchName)
-    val tableName = "table2"
-    runWorkflow(path, mainBranchName, tableName)
-    read(CloudPath(branchName, mainBranchName), tableName)
+    runWorkflow(path, mainBranchName, collectionName)
+    read(CloudPath(repoName, mainBranchName), collectionName)
 
   }
 
