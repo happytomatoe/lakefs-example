@@ -15,7 +15,7 @@ In [Main.scala](src/main/scala/Main.scala) next git workflow is used
 - Create a new bucket
 - Rename .env.template to .env
 - Go to [LakeFS UI](http://localhost:8000/)
-- After entering admin username save configuration file to project folder 
+- After entering admin username save configuration file(lakectl.yaml) into project folder 
 - Create new repository using the path to the bucket that you've created in MinIO. As Lakefs cannot create buckets 
 - Change repoName in Main.main function
 - Run Main.scala
